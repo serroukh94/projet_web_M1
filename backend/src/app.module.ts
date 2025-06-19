@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
-import { AppResolver } from './app.resolver';
+import { ChatResolver } from './chat.resolver';
+import { MessageResolver } from './message.resolver';
+import { MessageService } from './message.service';
+import { RabbitMQModule } from './rabbitmq.module';
 
 @Module({
   imports: [
@@ -10,7 +13,8 @@ import { AppResolver } from './app.resolver';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
     }),
+    RabbitMQModule,
   ],
-  providers: [AppResolver],
+  providers: [ChatResolver, MessageResolver, MessageService],
 })
 export class AppModule {}
