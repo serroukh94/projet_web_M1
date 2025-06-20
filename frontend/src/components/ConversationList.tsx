@@ -1,4 +1,4 @@
-import { Conversation } from '../types';
+import type { Conversation } from '../types';
 
 type Props = {
   conversations: Conversation[];
