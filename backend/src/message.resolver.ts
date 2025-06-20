@@ -1,34 +1,63 @@
-import { Args, Mutation, Resolver, Subscription } from '@nestjs/graphql';
-import { Message } from './models/message.model';
-import { RabbitMQService } from './rabbitmq.service';
-import { pubSub } from './pubsub';
-import { users } from './datastore';
+import { Args, ID, Mutation, Resolver, Subscription } from "@nestjs/graphql";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model, Types } from "mongoose";
+import { RabbitMQService } from "./rabbitmq.service";
+import { pubSub } from "./pubsub";
+import { Message } from "./schemas/message.schema";
+import { User, UserDocument } from "./schemas/user.schema";
 
 @Resolver(() => Message)
 export class MessageResolver {
-  constructor(private readonly rabbitmq: RabbitMQService) {}
+  constructor(
+    private readonly rabbitmq: RabbitMQService,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>
+  ) {}
 
+  // ──────────────────────────────────────────────────────────────
+  // Mutation : envoie un message
+  // ──────────────────────────────────────────────────────────────
   @Mutation(() => Message)
   async sendMessage(
-    @Args('conversationId') conversationId: string,
-    @Args('content') content: string,
+    @Args("conversationId", { type: () => ID }) conversationId: string,
+    @Args("content") content: string
   ): Promise<Message> {
-    const messagePayload = { conversationId, content, authorId: 'currentUserId' };
-    this.rabbitmq.sendMessage('new_message', messagePayload);
-    return {
-      id: 'temp-id',
+    // 1) tente de récupérer l’utilisateur courant
+    const authorDoc = await this.userModel.findOne(); 
+    const author = authorDoc
+      ? {
+          id: authorDoc.id, // getter mongoose -> string
+          username: authorDoc.username,
+          createdAt: authorDoc.createdAt,
+        }
+      : {
+          id: new Types.ObjectId().toHexString(),
+          username: "temp",
+          createdAt: new Date(),
+        };
+
+    // 2) publish sur Rabbit et retour optimiste
+    this.rabbitmq.sendMessage("new_message", {
+      conversationId,
       content,
-      author: users[0] ?? { id: 'temp', username: 'temp', createdAt: new Date().toISOString() },
-      createdAt: new Date().toISOString(),
-    };
+      authorId: author.id,
+    });
+
+    return {
+      id: new Types.ObjectId().toHexString(), // id temporaire du message
+      content,
+      author, // toujours avec id
+      createdAt: new Date(),
+    } as Message;
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // Subscription : écoute des nouveaux messages d'une conversation
+  // ──────────────────────────────────────────────────────────────
   @Subscription(() => Message, {
     filter: (payload, variables) =>
       payload.messageAdded.conversationId === variables.conversationId,
   })
-  messageAdded(@Args('conversationId') _id: string) {
-    return pubSub.asyncIterableIterator('messageAdded');
+  messageAdded(@Args("conversationId") _id: string) {
+    return pubSub.asyncIterableIterator("messageAdded");
   }
 }
-
