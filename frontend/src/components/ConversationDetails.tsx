@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Conversation, User } from '../types';
+import { useState, type FormEvent } from 'react';
+import type { Conversation, User } from '../types';
 
 type Props = {
   conversation: Conversation | null;
@@ -16,7 +16,7 @@ export default function ConversationDetails({ conversation, users, onSendMessage
     return users.find((u) => u.id === id)?.name || 'Unknown';
   }
 
-  function handleSend(e: React.FormEvent) {
+  function handleSend(e: FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
     onSendMessage(text);

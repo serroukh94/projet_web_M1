@@ -4,7 +4,7 @@ import UserForm from './components/UserForm';
 import UsersList from './components/UsersList';
 import ConversationList from './components/ConversationList';
 import ConversationDetails from './components/ConversationDetails';
-import { User, Conversation, Message } from './types';
+import type { User, Conversation, Message } from './types';
 
 function App() {
   const [users, setUsers] = useState<User[]>([]);

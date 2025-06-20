@@ -1,5 +1,5 @@
-import { useState, FormEvent } from 'react';
-import { User } from '../types';
+import { useState, type FormEvent } from 'react';
+import type { User } from '../types';
 
 type Props = {
   onCreate: (user: User) => void;
