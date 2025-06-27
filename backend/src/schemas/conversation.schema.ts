@@ -14,11 +14,11 @@ export class Conversation {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: User.name }] })
   @Field(() => [User])
-  participants: Types.ObjectId[] | User[];
+  participants: (Types.ObjectId | User)[];
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: Message.name }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Message' }] }) // <-- LE FIX
   @Field(() => [Message])
-  messages: Types.ObjectId[] | Message[];
+  messages: (Types.ObjectId | Message)[];
 
   @Field()
   createdAt: Date;

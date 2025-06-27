@@ -18,6 +18,7 @@ type Message {
   content: String!
   author: User!
   createdAt: DateTime!
+  conversationId: String
 }
 
 type Conversation {
@@ -29,13 +30,15 @@ type Conversation {
 
 type Query {
   me: User
+  users: [User!]!
   conversations: [Conversation!]!
   conversation(id: ID!): Conversation
 }
 
 type Mutation {
   createUser(username: String!): User!
-  sendMessage(conversationId: ID!, content: String!): Message!
+  createConversation(participantIds: [ID!]!): Conversation!
+  sendMessage(conversationId: ID!, content: String!, authorId: ID!): Message!
 }
 
 type Subscription {
