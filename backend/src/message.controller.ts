@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { pubSub } from './pubsub';
 import { MessageService } from './message.service';
 
@@ -11,7 +11,16 @@ export class MessageController {
   async handleNewMessage(@Payload() data: any) {
     try {
       const saved = await this.messageService.saveFinalMessage(data);
-      pubSub.publish('messageAdded', { messageAdded: saved, conversationId: data.conversationId });
+      await saved.populate('author');
+
+
+      pubSub.publish('messageAdded', {
+        messageAdded: {
+          ...saved.toObject(),
+          conversationId: data.conversationId
+        },
+        conversationId: data.conversationId,
+      });
     } catch (err) {
       console.error('Erreur dans handleNewMessage:', err);
     }

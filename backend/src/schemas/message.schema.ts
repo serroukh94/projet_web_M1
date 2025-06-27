@@ -21,6 +21,9 @@ export class Message {
 
   @Field()
   createdAt: Date;
+
+  @Field({ nullable: true })
+  conversationId?: string;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

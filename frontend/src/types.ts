@@ -9,6 +9,7 @@ export interface Message {
   content: string;
   author: User;
   createdAt: string;
+  conversationId?: string;
 }
 
 export interface Conversation {

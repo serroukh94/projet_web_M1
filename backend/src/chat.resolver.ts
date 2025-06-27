@@ -26,7 +26,7 @@ export class ChatResolver {
   async conversations(): Promise<Conversation[]> {
     return this.convModel.find().populate([
       { path: 'participants' },
-      { path: 'messages', populate: { path: 'author' } }
+      { path: 'messages', populate: { path: 'author' }, options: { strictPopulate: false } }
     ]);
   }
 
@@ -34,7 +34,7 @@ export class ChatResolver {
   async conversation(@Args('id', { type: () => ID }) id: string) {
     return this.convModel.findById(id).populate([
       { path: 'participants' },
-      { path: 'messages', populate: { path: 'author' } }
+      { path: 'messages', populate: { path: 'author' }, options: { strictPopulate: false } }
     ]);
   }
 
@@ -48,9 +48,20 @@ export class ChatResolver {
   async createConversation(
       @Args({ name: 'participantIds', type: () => [ID] }) participantIds: string[]
   ): Promise<Conversation> {
-    return this.convModel.create({
+    console.log('APPEL MUTATION', participantIds);
+    if (!participantIds || !participantIds.length || participantIds.includes(undefined) || participantIds.includes(null)) {
+      throw new Error('participantIds manquants ou invalides');
+    }
+
+    const conv = await this.convModel.create({
       participants: participantIds,
       messages: [],
     });
+
+    return this.convModel.findById(conv._id).populate([
+      { path: 'participants' },
+      { path: 'messages', populate: { path: 'author' }, options: { strictPopulate: false } }
+    ]);
   }
+
 }
