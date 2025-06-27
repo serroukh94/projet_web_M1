@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { gql, useQuery, useMutation, useSubscription } from '@apollo/client';
 import './App.css';
 import UserForm from './components/UserForm';
 import UsersList from './components/UsersList';
@@ -6,17 +7,90 @@ import ConversationList from './components/ConversationList';
 import ConversationDetails from './components/ConversationDetails';
 import type { User, Conversation, Message } from './types';
 
+const USERS_QUERY = gql`
+  query {
+    users { id username createdAt }
+  }
+`;
+
+const CONVERSATIONS_QUERY = gql`
+  query {
+    conversations {
+      id
+      createdAt
+      participants { id username createdAt }
+      messages { id content createdAt author { id username } }
+    }
+  }
+`;
+
+const CREATE_USER_MUTATION = gql`
+  mutation ($username: String!) { createUser(username: $username) { id username createdAt } }
+`;
+
+const SEND_MESSAGE_MUTATION = gql`
+  mutation ($conversationId: ID!, $content: String!) {
+    sendMessage(conversationId: $conversationId, content: $content) {
+      id
+      content
+      createdAt
+      author { id username }
+    }
+  }
+`;
+
+const MESSAGE_ADDED_SUB = gql`
+  subscription ($conversationId: String!) {
+    messageAdded(conversationId: $conversationId) {
+      id
+      content
+      createdAt
+      author { id username }
+    }
+  }
+`;
+
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
 
-  const nextUserId = users.length + 1;
-  const nextConvId = conversations.length + 1;
+  const { data: usersData, refetch: refetchUsers } = useQuery<{ users: User[] }>(USERS_QUERY);
+  const { data: convData, refetch: refetchConvs } = useQuery<{ conversations: Conversation[] }>(CONVERSATIONS_QUERY);
 
-  function handleCreateUser(user: User) {
-    setUsers([...users, user]);
+  const [createUser] = useMutation(CREATE_USER_MUTATION, {
+    onCompleted: () => refetchUsers()
+  });
+
+  const [sendMessage] = useMutation(SEND_MESSAGE_MUTATION, {
+    onCompleted: () => refetchConvs()
+  });
+
+  useSubscription(MESSAGE_ADDED_SUB, {
+    variables: { conversationId: selectedConv?.id ?? '' },
+    skip: !selectedConv,
+    onData: ({ data }) => {
+      const msg = data.data?.messageAdded as Message | undefined;
+      if (!msg) return;
+      setConversations((cs) =>
+        cs.map((c) =>
+          c.id === selectedConv?.id ? { ...c, messages: [...c.messages, msg] } : c
+        )
+      );
+    }
+  });
+
+  useEffect(() => {
+    if (usersData) setUsers(usersData.users);
+  }, [usersData]);
+
+  useEffect(() => {
+    if (convData) setConversations(convData.conversations);
+  }, [convData]);
+
+  function handleCreateUser(name: string) {
+    createUser({ variables: { username: name } });
   }
 
   function handleSelectUser(user: User) {
@@ -28,21 +102,27 @@ function App() {
     setSelectedConv(conv);
   }
 
+  function generateId() {
+    const array = crypto.getRandomValues(new Uint8Array(12));
+    return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
   function handleStartConversation(other: User) {
     if (!selectedUser) return;
     const existing = conversations.find(
       (c) =>
-        c.participants.includes(selectedUser.id) &&
-        c.participants.includes(other.id)
+        c.participants.some((p) => p.id === selectedUser.id) &&
+        c.participants.some((p) => p.id === other.id)
     );
     if (existing) {
       setSelectedConv(existing);
       return;
     }
     const newConv: Conversation = {
-      id: nextConvId,
-      participants: [selectedUser.id, other.id],
+      id: generateId(),
+      participants: [selectedUser, other],
       messages: [],
+      createdAt: new Date().toISOString(),
     };
     setConversations([...conversations, newConv]);
     setSelectedConv(newConv);
@@ -50,24 +130,11 @@ function App() {
 
   function handleSendMessage(text: string) {
     if (!selectedConv || !selectedUser) return;
-    const newMsg: Message = {
-      id: selectedConv.messages.length + 1,
-      senderId: selectedUser.id,
-      content: text,
-      timestamp: new Date().toISOString(),
-    };
-    const updatedConv: Conversation = {
-      ...selectedConv,
-      messages: [...selectedConv.messages, newMsg],
-    };
-    setConversations(
-      conversations.map((c) => (c.id === updatedConv.id ? updatedConv : c))
-    );
-    setSelectedConv(updatedConv);
+    sendMessage({ variables: { conversationId: selectedConv.id, content: text } });
   }
 
   const userConvs = selectedUser
-    ? conversations.filter((c) => c.participants.includes(selectedUser.id))
+    ? conversations.filter((c) => c.participants.some((p) => p.id === selectedUser.id))
     : [];
 
   const otherUsers = selectedUser
@@ -77,12 +144,12 @@ function App() {
   return (
     <div className="App">
       <h1>Messagerie</h1>
-      <UserForm onCreate={handleCreateUser} nextId={nextUserId} />
+      <UserForm onCreate={handleCreateUser} />
       <UsersList users={users} onSelect={handleSelectUser} />
       {selectedUser && (
         <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
           <div>
-            <h2>Bienvenue {selectedUser.name}</h2>
+            <h2>Bienvenue {selectedUser.username}</h2>
             {otherUsers.length > 0 && (
               <div>
                 <h4>Démarrer une conversation</h4>
@@ -92,7 +159,7 @@ function App() {
                     onClick={() => handleStartConversation(u)}
                     style={{ marginRight: '0.5rem' }}
                   >
-                    Avec {u.name}
+                    Avec {u.username}
                   </button>
                 ))}
               </div>
@@ -104,7 +171,6 @@ function App() {
           </div>
           <ConversationDetails
             conversation={selectedConv}
-            users={users}
             onSendMessage={handleSendMessage}
           />
         </div>

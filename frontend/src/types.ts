@@ -1,17 +1,19 @@
 export interface User {
-  id: number;
-  name: string;
+  id: string;
+  username: string;
+  createdAt: string;
 }
 
 export interface Message {
-  id: number;
-  senderId: number;
+  id: string;
   content: string;
-  timestamp: string;
+  author: User;
+  createdAt: string;
 }
 
 export interface Conversation {
-  id: number;
-  participants: number[]; // user ids
+  id: string;
+  participants: User[];
   messages: Message[];
+  createdAt: string;
 }

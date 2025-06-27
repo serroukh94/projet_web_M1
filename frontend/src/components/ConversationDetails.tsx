@@ -1,20 +1,17 @@
 import { useState, type FormEvent } from 'react';
-import type { Conversation, User } from '../types';
+import type { Conversation } from '../types';
 
 type Props = {
   conversation: Conversation | null;
-  users: User[];
   onSendMessage: (text: string) => void;
 };
 
-export default function ConversationDetails({ conversation, users, onSendMessage }: Props) {
+export default function ConversationDetails({ conversation, onSendMessage }: Props) {
   if (!conversation) return <div>Sélectionnez une conversation</div>;
 
   const [text, setText] = useState('');
 
-  function getUserName(id: number) {
-    return users.find((u) => u.id === id)?.name || 'Unknown';
-  }
+
 
   function handleSend(e: FormEvent) {
     e.preventDefault();
@@ -29,7 +26,7 @@ export default function ConversationDetails({ conversation, users, onSendMessage
       <ul>
         {conversation.messages.map((m) => (
           <li key={m.id}>
-            <strong>{getUserName(m.senderId)}:</strong> {m.content}
+            <strong>{m.author.username}:</strong> {m.content}
           </li>
         ))}
       </ul>
