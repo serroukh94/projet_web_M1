@@ -50,6 +50,7 @@ const MESSAGE_ADDED_SUB = gql`
   }
 `;
 
+
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);

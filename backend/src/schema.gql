@@ -36,6 +36,7 @@ type Query {
 
 type Mutation {
   createUser(username: String!): User!
+  createConversation(participantIds: [ID!]!): Conversation!
   sendMessage(conversationId: ID!, content: String!): Message!
 }
 
