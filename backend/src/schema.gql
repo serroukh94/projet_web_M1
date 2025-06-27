@@ -29,6 +29,7 @@ type Conversation {
 
 type Query {
   me: User
+  users: [User!]!
   conversations: [Conversation!]!
   conversation(id: ID!): Conversation
 }

@@ -60,7 +60,15 @@ function App() {
   const { data: convData, refetch: refetchConvs } = useQuery<{ conversations: Conversation[] }>(CONVERSATIONS_QUERY);
 
   const [createUser] = useMutation(CREATE_USER_MUTATION, {
-    onCompleted: () => refetchUsers()
+    onCompleted: () => refetchUsers(),
+    update(cache, { data }) {
+      const newUser = data?.createUser as User | undefined;
+      if (!newUser) return;
+      cache.updateQuery<{ users: User[] }>({ query: USERS_QUERY }, (old) => {
+        if (!old) return { users: [newUser] };
+        return { users: [...old.users, newUser] };
+      });
+    },
   });
 
   const [sendMessage] = useMutation(SEND_MESSAGE_MUTATION, {
