@@ -13,7 +13,7 @@ export default function ConversationList({ conversations, onSelect }: Props) {
         {conversations.map((c) => (
           <li key={c.id}>
             <button onClick={() => onSelect(c)}>
-              Conversation #{c.id} ({c.participants.join(', ')})
+              Conversation #{c.id} ({c.participants.map(p => p.username).join(', ')})
             </button>
           </li>
         ))}

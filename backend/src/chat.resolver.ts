@@ -18,6 +18,11 @@ export class ChatResolver {
     return this.userModel.findOne().lean();
   }
 
+  @Query(() => [User])
+  async users(): Promise<User[]> {
+    return this.userModel.find().lean();
+  }
+
   @Query(() => [Conversation])
   async conversations(): Promise<Conversation[]> {
     return this.convModel.find().populate(['participants', 'messages']).lean();

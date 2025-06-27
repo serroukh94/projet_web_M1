@@ -12,7 +12,7 @@ export default function UsersList({ users, onSelect }: Props) {
       <ul>
         {users.map((u) => (
           <li key={u.id}>
-            <button onClick={() => onSelect(u)}>{u.name}</button>
+            <button onClick={() => onSelect(u)}>{u.username}</button>
           </li>
         ))}
       </ul>

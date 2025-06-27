@@ -1,18 +1,15 @@
 import { useState, type FormEvent } from 'react';
-import type { User } from '../types';
-
 type Props = {
-  onCreate: (user: User) => void;
-  nextId: number;
+  onCreate: (username: string) => void;
 };
 
-export default function UserForm({ onCreate, nextId }: Props) {
+export default function UserForm({ onCreate }: Props) {
   const [name, setName] = useState('');
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    onCreate({ id: nextId, name });
+    onCreate(name);
     setName('');
   }
 
