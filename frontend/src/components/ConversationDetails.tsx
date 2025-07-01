@@ -22,7 +22,7 @@ export default function ConversationDetails({ conversation, onSendMessage }: Pro
 
   return (
     <div>
-      <h3>Détails de la conversation #{conversation.id}</h3>
+      <h3>Détails de la conversation</h3>
       <ul>
         {conversation.messages.map((m) => (
           <li key={m.id}>

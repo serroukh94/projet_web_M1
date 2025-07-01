@@ -10,13 +10,16 @@ export default function ConversationList({ conversations, onSelect }: Props) {
     <div>
       <h3>Conversations</h3>
       <ul>
-        {conversations.map((c) => (
-          <li key={c.id}>
-            <button onClick={() => onSelect(c)}>
-              Conversation #{c.id} ({c.participants.map(p => p.username).join(', ')})
-            </button>
-          </li>
-        ))}
+        {conversations.map((c) => {
+          const noms = c.participants.map((p) => p.username).join(', ');
+          return (
+            <li key={c.id}>
+              <button onClick={() => onSelect(c)}>
+                💬 {noms}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
