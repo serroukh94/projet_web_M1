@@ -20,11 +20,12 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// ------------ AJOUTE CECI ABSOLUMENT -----------------
+
 UserSchema.virtual('id').get(function (this: any) {
   // "this" est le doc Mongo, ._id c'est le vrai id Mongo
   return this._id?.toHexString ? this._id.toHexString() : this._id;
 });
+
 UserSchema.set('toJSON', { virtuals: true });
 UserSchema.set('toObject', { virtuals: true });
-// -----------------------------------------------------
+

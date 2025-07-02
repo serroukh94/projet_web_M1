@@ -11,14 +11,13 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "skipLibCheck": true,
+    "types": ["node", "jest"],
     "lib": [
       "es2017",
       "esnext.asynciterable"
     ]
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": [
     "node_modules"
   ]

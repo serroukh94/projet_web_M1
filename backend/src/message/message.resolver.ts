@@ -1,10 +1,11 @@
 import { Args, ID, Mutation, Resolver, Subscription } from "@nestjs/graphql";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { RabbitMQService } from "./rabbitmq.service";
-import { pubSub } from "./pubsub";
-import { Message, MessageDocument } from "./schemas/message.schema";
-import { User, UserDocument } from "./schemas/user.schema";
+import { pubSub } from '../pubsub';   
+import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
+import { Message, MessageDocument } from "../schemas/message.schema";
+import { User, UserDocument } from "../schemas/user.schema";
+
 
 @Resolver(() => Message)
 export class MessageResolver {

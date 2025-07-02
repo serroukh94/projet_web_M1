@@ -5,12 +5,12 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { ChatResolver } from './chat.resolver';
-import { MessageResolver } from './message.resolver';
 import { MessageService } from './message.service';
-import { RabbitMQModule } from './rabbitmq.module';
 import { User, UserSchema } from './schemas/user.schema';
 import { Message, MessageSchema } from './schemas/message.schema';
 import { Conversation, ConversationSchema } from './schemas/conversation.schema';
+import { MessageResolver } from './message/message.resolver';
+import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 
 
 
