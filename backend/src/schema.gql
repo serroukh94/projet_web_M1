@@ -1,0 +1,46 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  id: ID!
+  username: String!
+  createdAt: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Message {
+  id: ID!
+  content: String!
+  author: User!
+  createdAt: DateTime!
+  conversationId: String
+}
+
+type Conversation {
+  id: ID!
+  participants: [User!]!
+  messages: [Message!]!
+  createdAt: DateTime!
+}
+
+type Query {
+  me: User
+  users: [User!]!
+  conversations: [Conversation!]!
+  conversation(id: ID!): Conversation
+}
+
+type Mutation {
+  createUser(username: String!): User!
+  createConversation(participantIds: [ID!]!): Conversation!
+  sendMessage(conversationId: ID!, content: String!, authorId: ID!): Message!
+}
+
+type Subscription {
+  messageAdded(conversationId: String!): Message!
+}

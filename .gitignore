@@ -47,6 +47,7 @@ backend/coverage/
 backend/*.sqlite
 backend/*.db
 backend/.env*
+!backend/.env.example
 backend/test-results/
 
 ############################################################

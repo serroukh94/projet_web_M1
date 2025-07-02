@@ -1,34 +1,60 @@
-import { Args, Mutation, Resolver, Subscription } from '@nestjs/graphql';
-import { Message } from './models/message.model';
-import { RabbitMQService } from './rabbitmq.service';
-import { pubSub } from './pubsub';
-import { users } from './datastore';
+import { Args, ID, Mutation, Resolver, Subscription } from "@nestjs/graphql";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model, Types } from "mongoose";
+import { RabbitMQService } from "./rabbitmq.service";
+import { pubSub } from "./pubsub";
+import { Message, MessageDocument } from "./schemas/message.schema";
+import { User, UserDocument } from "./schemas/user.schema";
 
 @Resolver(() => Message)
 export class MessageResolver {
-  constructor(private readonly rabbitmq: RabbitMQService) {}
+  constructor(
+      private readonly rabbitmq: RabbitMQService,
+      @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+      @InjectModel(Message.name) private readonly messageModel: Model<MessageDocument>
+  ) {}
 
   @Mutation(() => Message)
   async sendMessage(
-    @Args('conversationId') conversationId: string,
-    @Args('content') content: string,
+      @Args("conversationId", { type: () => ID }) conversationId: string,
+      @Args("content") content: string,
+      @Args("authorId", { type: () => ID }) authorId: string
   ): Promise<Message> {
-    const messagePayload = { conversationId, content, authorId: 'currentUserId' };
-    this.rabbitmq.sendMessage('new_message', messagePayload);
-    return {
-      id: 'temp-id',
+
+    const authorDoc = await this.userModel.findById(authorId);
+    const author = authorDoc
+        ? {
+          id: authorDoc.id,
+          username: authorDoc.username,
+          createdAt: authorDoc.createdAt,
+        }
+        : {
+          id: new Types.ObjectId().toHexString(),
+          username: "temp",
+          createdAt: new Date(),
+        };
+
+
+    this.rabbitmq.sendMessage("new_message", {
+      conversationId,
       content,
-      author: users[0] ?? { id: 'temp', username: 'temp', createdAt: new Date().toISOString() },
-      createdAt: new Date().toISOString(),
-    };
+      authorId: author.id,
+    });
+
+    return {
+      id: new Types.ObjectId().toHexString(),
+      content,
+      author,
+      createdAt: new Date(),
+    } as Message;
   }
+
 
   @Subscription(() => Message, {
     filter: (payload, variables) =>
-      payload.messageAdded.conversationId === variables.conversationId,
+        payload.messageAdded.conversationId === variables.conversationId,
   })
-  messageAdded(@Args('conversationId') _id: string) {
-    return pubSub.asyncIterableIterator('messageAdded');
+  messageAdded(@Args("conversationId") _id: string) {
+    return pubSub.asyncIterableIterator("messageAdded");
   }
 }
-
