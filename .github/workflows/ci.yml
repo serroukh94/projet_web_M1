@@ -4,18 +4,15 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ "**" ]
 
 jobs:
   test-build:
     runs-on: ubuntu-latest
 
-    # ───── Containers “services” nécessaires aux tests ─────
     services:
       mongo:
         image: mongo:7
         ports: [ "27017:27017" ]
-        # pas de variables d'env particulières
       rabbitmq:
         image: rabbitmq:3-management
         ports: [ "5672:5672" ]
@@ -23,46 +20,36 @@ jobs:
           RABBITMQ_DEFAULT_USER: user
           RABBITMQ_DEFAULT_PASS: password
 
-    # ───── Variables d’environnement dispo dans toutes les étapes ─────
     env:
-      # Hostnames = nom du service (cf. ci-dessus)
       MONGO_URI: "mongodb://mongo:27017/chatdb"
       RABBITMQ_URL: "amqp://user:password@rabbitmq:5672"
-      RABBITMQ_QUEUE: "chat_queue"
-      JWT_SECRET: "DEV_SECRET"
+      RABBITMQ_QUEUE: chat_queue
+      JWT_SECRET: DEV_SECRET
+
+    # Applique "backend" comme répertoire de travail par défaut
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
-      # 1. Récupération du code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Configuration de Node.js + cache npm
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json  # <- important
 
-      # 3. Installation des deps
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
-      # 4. Build TypeScript ➜ dist
-      - name: Build project
+      - name: Build
         run: npm run build
 
-      # 5. Exécution des tests Jest
-      - name: Run unit & integration tests
+      - name: Test
         run: npm test -- --runInBand
 
-      # 6. (Optionnel) Rapport de couverture
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v4
-      #   with:
-      #     files: ./coverage/clover.xml
-      #     fail_ci_if_error: true
-
-      # 7. Validation de la construction Docker
       - name: Docker build
-        run: |
-          docker build -t nest-chat-app .
+        run: docker build -t nest-chat-app ./backend
