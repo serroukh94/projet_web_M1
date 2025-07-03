@@ -39,8 +39,18 @@ type Mutation {
   createUser(username: String!): User!
   createConversation(participantIds: [ID!]!): Conversation!
   sendMessage(conversationId: ID!, content: String!): Message!
-  register(username: String!, password: String!): String!
-  login(username: String!, password: String!): String!
+  register(data: RegisterInput!): String!
+  login(data: LoginInput!): String!
+}
+
+input RegisterInput {
+  username: String!
+  password: String!
+}
+
+input LoginInput {
+  username: String!
+  password: String!
 }
 
 type Subscription {
