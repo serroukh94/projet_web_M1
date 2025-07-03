@@ -43,7 +43,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json  # <- important
 
       - name: Install deps
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npm run build
