@@ -7,7 +7,7 @@ type Props = {
 
 export default function UsersList({ users, onSelect }: Props) {
   return (
-    <div>
+    <div className="users-list">
       <h3>Utilisateurs</h3>
       <ul>
         {users.map((u) => (

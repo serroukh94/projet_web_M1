@@ -7,7 +7,7 @@ type Props = {
 
 export default function ConversationList({ conversations, onSelect }: Props) {
   return (
-    <div>
+    <div className="conversation-list">
       <h3>Conversations</h3>
       <ul>
         {conversations.map((c) => {
