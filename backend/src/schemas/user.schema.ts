@@ -14,6 +14,10 @@ export class User {
   @Field()
   username: string;
 
+  // ───────────── hash stocké uniquement en base
+  @Prop({ required: true })
+  passwordHash: string;    
+  
   @Field()
   createdAt: Date; // auto-map via timestamps
 }

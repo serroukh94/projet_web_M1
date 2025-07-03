@@ -11,6 +11,7 @@ import { Message, MessageSchema } from './schemas/message.schema';
 import { Conversation, ConversationSchema } from './schemas/conversation.schema';
 import { MessageResolver } from './message/message.resolver';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
+import { AuthModule } from './auth/auth.module';
 
 
 
@@ -31,7 +32,8 @@ import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
     }),
 
     RabbitMQModule,
+    AuthModule, 
   ],
-  providers: [ChatResolver, MessageResolver, MessageService],
+  providers: [ChatResolver, MessageResolver, MessageService, AuthModule,],
 })
 export class AppModule {}
