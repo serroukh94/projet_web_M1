@@ -14,7 +14,7 @@ export default function UserForm({ onCreate }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '1rem' }}>
+    <form onSubmit={handleSubmit} className="user-form">
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}

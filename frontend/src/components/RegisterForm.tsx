@@ -15,7 +15,7 @@ export default function RegisterForm({ onRegister }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '1rem' }}>
+    <form onSubmit={handleSubmit} className="user-form">
       <h3>Inscription</h3>
       <input
         placeholder="Nom d'utilisateur"

@@ -15,7 +15,7 @@ export default function LoginForm({ onLogin }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '1rem' }}>
+    <form onSubmit={handleSubmit} className="user-form">
       <h3>Connexion</h3>
       <input
         placeholder="Nom d'utilisateur"
