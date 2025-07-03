@@ -197,52 +197,69 @@ function App() {
   }
 
   const userConvs = currentUser
-      ? conversations.filter((c) => c.participants.some((p) => String(p.id) === String(currentUser.id)))
-      : [];
+    ? conversations.filter((c) =>
+        c.participants.some((p) => String(p.id) === String(currentUser.id)),
+      )
+    : [];
 
   const otherUsers = currentUser
-      ? users.filter((u) => u.id !== currentUser.id)
-      : [];
+    ? users.filter((u) => u.id !== currentUser.id)
+    : [];
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    window.location.reload();
+  }
 
   return (
-      <div className="App">
+    <div className="App">
+      <header className="header">
         <h1>Messagerie</h1>
-        {!currentUser && (
-          <div>
-            <RegisterForm onRegister={handleRegister} />
-            <LoginForm onLogin={handleLogin} />
+        {currentUser && (
+          <div className="user-info">
+            <span>Bienvenue {currentUser.username}</span>
+            <button className="logout" onClick={handleLogout}>
+              Déconnexion
+            </button>
           </div>
         )}
-        {currentUser && (
-            <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
-              <div>
-                <h2>Bienvenue {currentUser.username}</h2>
-                {otherUsers.length > 0 && (
-                    <div>
-                      <h4>Démarrer une conversation</h4>
-                      {otherUsers.map((u) => (
-                          <button
-                              key={u.id}
-                              onClick={() => handleStartConversation(u)}
-                              style={{ marginRight: '0.5rem' }}
-                          >
-                            Avec {u.username}
-                          </button>
-                      ))}
-                    </div>
-                )}
-                <ConversationList
-                    conversations={userConvs}
-                    onSelect={handleSelectConv}
-                />
+      </header>
+      {!currentUser && (
+        <div className="auth-forms">
+          <RegisterForm onRegister={handleRegister} />
+          <LoginForm onLogin={handleLogin} />
+        </div>
+      )}
+      {currentUser && (
+        <div className="main-content">
+          <div className="sidebar">
+            {otherUsers.length > 0 && (
+              <div className="start-conv">
+                <h4>Démarrer une conversation</h4>
+                {otherUsers.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => handleStartConversation(u)}
+                  >
+                    Avec {u.username}
+                  </button>
+                ))}
               </div>
-              <ConversationDetails
-                  conversation={selectedConv}
-                  onSendMessage={handleSendMessage}
-              />
-            </div>
-        )}
-      </div>
+            )}
+            <ConversationList
+              conversations={userConvs}
+              onSelect={handleSelectConv}
+            />
+          </div>
+          <div className="details">
+            <ConversationDetails
+              conversation={selectedConv}
+              onSendMessage={handleSendMessage}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

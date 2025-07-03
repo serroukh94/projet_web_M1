@@ -1,8 +1,15 @@
 #root {
-  max-width: 1280px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.App {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
@@ -39,4 +46,85 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Custom styles for the messaging app */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(90deg, #6b73ff, #000dff);
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-forms {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-evenly;
+}
+
+.main-content {
+  display: flex;
+  gap: 2rem;
+}
+
+.sidebar {
+  width: 220px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.details {
+  flex-grow: 1;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.conversation-details ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.conversation-details li {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+}
+
+.user-form {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-form input {
+  padding: 0.4rem;
+}
+
+.conversation-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.logout {
+  background-color: #ff6666;
+  color: #fff;
+  border-radius: 8px;
+  border: none;
 }
