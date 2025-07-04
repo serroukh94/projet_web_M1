@@ -52,4 +52,5 @@ jobs:
         run: npm test -- --runInBand
 
       - name: Docker build
-        run: docker build -t nest-chat-app -f ../dockerfile ..
+        run: docker build -t nest-chat-app .
+ 
