@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { User, UserSchema } from './schemas/user.schema';
 import { Message, MessageSchema } from './schemas/message.schema';
 import { Conversation, ConversationSchema } from './schemas/conversation.schema';
-
-import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
+import { MessageController } from './message/message.controller';
 
 /**
  * Module dédié au micro-service RabbitMQ.

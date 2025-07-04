@@ -7,9 +7,8 @@ type Props = {
 };
 
 export default function ConversationDetails({ conversation, onSendMessage }: Props) {
-  if (!conversation) return <div>Sélectionnez une conversation</div>;
-
   const [text, setText] = useState('');
+  if (!conversation) return <div className="conversation-details">Sélectionnez une conversation</div>;
 
 
 
@@ -21,7 +20,7 @@ export default function ConversationDetails({ conversation, onSendMessage }: Pro
   }
 
   return (
-    <div>
+    <div className="conversation-details">
       <h3>Détails de la conversation</h3>
       <ul>
         {conversation.messages.map((m) => (

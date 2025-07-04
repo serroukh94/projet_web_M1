@@ -1,8 +1,11 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Conversation, ConversationDocument } from './schemas/conversation.schema';
+import { GqlAuthGuard } from './auth/gql-auth.guard';
+import { CurrentUser } from './auth/current-user.decorator';
 
 @Resolver()
 export class ChatResolver {
@@ -13,8 +16,9 @@ export class ChatResolver {
 
   // Queries
   @Query(() => User, { nullable: true })
-  async me(): Promise<User | null> {
-    return this.userModel.findOne();
+  @UseGuards(GqlAuthGuard)
+  async me(@CurrentUser() user: { userId: string }): Promise<User | null> {
+    return this.userModel.findById(user.userId);
   }
 
   @Query(() => [User])
@@ -23,11 +27,14 @@ export class ChatResolver {
   }
 
   @Query(() => [Conversation])
-  async conversations(): Promise<Conversation[]> {
-    return this.convModel.find().populate([
-      { path: 'participants' },
-      { path: 'messages', populate: { path: 'author' }, options: { strictPopulate: false } }
-    ]);
+  @UseGuards(GqlAuthGuard)
+  async conversations(@CurrentUser() user: { userId: string }): Promise<Conversation[]> {
+    return this.convModel
+      .find({ participants: user.userId })
+      .populate([
+        { path: 'participants' },
+        { path: 'messages', populate: { path: 'author' }, options: { strictPopulate: false } }
+      ]);
   }
 
   @Query(() => Conversation, { nullable: true })
@@ -45,16 +52,19 @@ export class ChatResolver {
   }
 
   @Mutation(() => Conversation)
+  @UseGuards(GqlAuthGuard)
   async createConversation(
-      @Args({ name: 'participantIds', type: () => [ID] }) participantIds: string[]
+    @Args({ name: 'participantIds', type: () => [ID] }) participantIds: string[],
+    @CurrentUser() user: { userId: string },
   ): Promise<Conversation> {
-    console.log('APPEL MUTATION', participantIds);
-    if (!participantIds || !participantIds.length || participantIds.includes(undefined) || participantIds.includes(null)) {
+    if (!participantIds || participantIds.includes(undefined) || participantIds.includes(null)) {
       throw new Error('participantIds manquants ou invalides');
     }
 
+    const uniqueIds = Array.from(new Set([user.userId, ...participantIds]));
+
     const conv = await this.convModel.create({
-      participants: participantIds,
+      participants: uniqueIds,
       messages: [],
     });
 

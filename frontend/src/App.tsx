@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { gql, useQuery, useMutation, useSubscription } from '@apollo/client';
 import './App.css';
-import UserForm from './components/UserForm';
-import UsersList from './components/UsersList';
+import LoginForm from './components/LoginForm';
+import RegisterForm from './components/RegisterForm';
 import ConversationList from './components/ConversationList';
 import ConversationDetails from './components/ConversationDetails';
 import type { User, Conversation, Message } from './types';
@@ -24,9 +24,21 @@ const CONVERSATIONS_QUERY = gql`
   }
 `;
 
-const CREATE_USER_MUTATION = gql`
-  mutation ($username: String!) {
-    createUser(username: $username) { id username createdAt }
+const REGISTER_MUTATION = gql`
+  mutation ($data: RegisterInput!) {
+    register(data: $data)
+  }
+`;
+
+const LOGIN_MUTATION = gql`
+  mutation ($data: LoginInput!) {
+    login(data: $data)
+  }
+`;
+
+const ME_QUERY = gql`
+  query {
+    me { id username createdAt }
   }
 `;
 
@@ -42,8 +54,8 @@ const CREATE_CONVERSATION_MUTATION = gql`
 `;
 
 const SEND_MESSAGE_MUTATION = gql`
-  mutation ($conversationId: ID!, $content: String!, $authorId: ID!) {
-    sendMessage(conversationId: $conversationId, content: $content, authorId: $authorId) {
+  mutation ($conversationId: ID!, $content: String!) {
+    sendMessage(conversationId: $conversationId, content: $content) {
       id
       content
       createdAt
@@ -68,26 +80,18 @@ const MESSAGE_ADDED_SUB = gql`
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
 
-  const { data: usersData, refetch: refetchUsers } = useQuery<{ users: User[] }>(USERS_QUERY);
-  const { data: convData } = useQuery<{ conversations: Conversation[] }>(
-      CONVERSATIONS_QUERY,
-      { pollInterval: 500 }
-  );
-
-  const [createUser] = useMutation(CREATE_USER_MUTATION, {
-    onCompleted: () => refetchUsers(),
-    update(cache, { data }) {
-      const newUser = data?.createUser as User | undefined;
-      if (!newUser) return;
-      cache.updateQuery<{ users: User[] }>({ query: USERS_QUERY }, (old) => {
-        if (!old) return { users: [newUser] };
-        return { users: [...old.users, newUser] };
-      });
-    },
+  const { data: meData } = useQuery<{ me: User | null }>(ME_QUERY, { skip: !localStorage.getItem('token') });
+  const { data: usersData } = useQuery<{ users: User[] }>(USERS_QUERY, { skip: !localStorage.getItem('token') });
+  const { data: convData } = useQuery<{ conversations: Conversation[] }>(CONVERSATIONS_QUERY, {
+    skip: !localStorage.getItem('token'),
+    pollInterval: 500,
   });
+
+  const [register] = useMutation(REGISTER_MUTATION);
+  const [login] = useMutation(LOGIN_MUTATION);
 
   const [createConversation] = useMutation(CREATE_CONVERSATION_MUTATION, {
     update(cache, { data }) {
@@ -123,6 +127,10 @@ function App() {
   }, [usersData]);
 
   useEffect(() => {
+    if (meData) setCurrentUser(meData.me);
+  }, [meData]);
+
+  useEffect(() => {
     if (convData) setConversations(convData.conversations);
   }, [convData]);
 
@@ -135,24 +143,16 @@ function App() {
   }, [conversations, selectedConv]);
 
 
-  function handleCreateUser(name: string) {
-    createUser({ variables: { username: name } });
-  }
-
-  function handleSelectUser(user: User) {
-    setSelectedUser(user);
-    setSelectedConv(null);
-  }
 
   function handleSelectConv(conv: Conversation) {
     setSelectedConv(conv);
   }
 
   async function handleStartConversation(other: User) {
-    if (!selectedUser) return;
+    if (!currentUser) return;
     const existing = conversations.find(
         (c) =>
-            c.participants.some((p) => String(p.id) === String(selectedUser.id)) &&
+            c.participants.some((p) => String(p.id) === String(currentUser.id)) &&
             c.participants.some((p) => String(p.id) === String(other.id))
     );
     if (existing) {
@@ -160,7 +160,7 @@ function App() {
       return;
     }
     const { data } = await createConversation({
-      variables: { participantIds: [selectedUser.id, other.id] },
+      variables: { participantIds: [other.id] },
     });
     if (data?.createConversation) {
       setConversations([...conversations, data.createConversation]);
@@ -169,59 +169,97 @@ function App() {
   }
 
   function handleSendMessage(text: string) {
-    if (!selectedConv || !selectedUser) return;
+    if (!selectedConv || !currentUser) return;
     sendMessage({
       variables: {
         conversationId: selectedConv.id,
         content: text,
-        authorId: selectedUser.id,
       },
     });
   }
 
-  const userConvs = selectedUser
-      ? conversations.filter((c) => c.participants.some((p) => String(p.id) === String(selectedUser.id)))
-      : [];
+  async function handleRegister(data: { username: string; password: string }) {
+    const res = await register({ variables: { data } });
+    const token = res.data?.register as string | undefined;
+    if (token) {
+      localStorage.setItem('token', token);
+      window.location.reload();
+    }
+  }
 
-  const otherUsers = selectedUser
-      ? users.filter((u) => u.id !== selectedUser.id)
-      : [];
+  async function handleLogin(data: { username: string; password: string }) {
+    const res = await login({ variables: { data } });
+    const token = res.data?.login as string | undefined;
+    if (token) {
+      localStorage.setItem('token', token);
+      window.location.reload();
+    }
+  }
+
+  const userConvs = currentUser
+    ? conversations.filter((c) =>
+        c.participants.some((p) => String(p.id) === String(currentUser.id)),
+      )
+    : [];
+
+  const otherUsers = currentUser
+    ? users.filter((u) => u.id !== currentUser.id)
+    : [];
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    window.location.reload();
+  }
 
   return (
-      <div className="App">
+    <div className="App">
+      <header className="header">
         <h1>Messagerie</h1>
-        <UserForm onCreate={handleCreateUser} />
-        <UsersList users={users} onSelect={handleSelectUser} />
-        {selectedUser && (
-            <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
-              <div>
-                <h2>Bienvenue {selectedUser.username}</h2>
-                {otherUsers.length > 0 && (
-                    <div>
-                      <h4>Démarrer une conversation</h4>
-                      {otherUsers.map((u) => (
-                          <button
-                              key={u.id}
-                              onClick={() => handleStartConversation(u)}
-                              style={{ marginRight: '0.5rem' }}
-                          >
-                            Avec {u.username}
-                          </button>
-                      ))}
-                    </div>
-                )}
-                <ConversationList
-                    conversations={userConvs}
-                    onSelect={handleSelectConv}
-                />
-              </div>
-              <ConversationDetails
-                  conversation={selectedConv}
-                  onSendMessage={handleSendMessage}
-              />
-            </div>
+        {currentUser && (
+          <div className="user-info">
+            <span>Bienvenue {currentUser.username}</span>
+            <button className="logout" onClick={handleLogout}>
+              Déconnexion
+            </button>
+          </div>
         )}
-      </div>
+      </header>
+      {!currentUser && (
+        <div className="auth-forms">
+          <RegisterForm onRegister={handleRegister} />
+          <LoginForm onLogin={handleLogin} />
+        </div>
+      )}
+      {currentUser && (
+        <div className="main-content">
+          <div className="sidebar">
+            {otherUsers.length > 0 && (
+              <div className="start-conv">
+                <h4>Démarrer une conversation</h4>
+                {otherUsers.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => handleStartConversation(u)}
+                  >
+                    Avec {u.username}
+                  </button>
+                ))}
+              </div>
+            )}
+            <ConversationList
+              conversations={userConvs}
+              onSelect={handleSelectConv}
+            />
+          </div>
+          <div className="details">
+            <ConversationDetails
+              conversation={selectedConv}
+              onSendMessage={handleSendMessage}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

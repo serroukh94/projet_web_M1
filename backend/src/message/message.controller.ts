@@ -1,7 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { pubSub } from './pubsub';
-import { MessageService } from './message.service';
+import { MessageService } from '../message.service';
+import { pubSub } from '../pubsub';   
+
 
 @Controller()
 export class MessageController {

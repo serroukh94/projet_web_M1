@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**"  ]
+  pull_request:
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports: [ "27017:27017" ]
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports: [ "5672:5672" ]
+        env:
+          RABBITMQ_DEFAULT_USER: user
+          RABBITMQ_DEFAULT_PASS: password
+
+    env:
+      MONGO_URI: "mongodb://mongo:27017/chatdb"
+      RABBITMQ_URL: "amqp://user:password@rabbitmq:5672"
+      RABBITMQ_QUEUE: chat_queue
+      JWT_SECRET: DEV_SECRET
+
+    # Applique "backend" comme répertoire de travail par défaut
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json  # <- important
+
+      - name: Install deps
+        run: npm install --force
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test -- --runInBand
+
+      - name: Docker build
+        run: docker build -t nest-chat-app .
+ 

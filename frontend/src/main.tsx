@@ -7,6 +7,7 @@ import {
   split,
   HttpLink,
 } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -15,8 +16,26 @@ import App from './App.tsx';
 
 const httpLink = new HttpLink({ uri: 'http://localhost:3000/graphql' });
 
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+
 const wsLink = new GraphQLWsLink(
-  createClient({ url: 'ws://localhost:3000/graphql' })
+  createClient({
+    url: 'ws://localhost:3000/graphql',
+    connectionParams: () => {
+      const token = localStorage.getItem('token');
+      return {
+        Authorization: token ? `Bearer ${token}` : '',
+      };
+    },
+  })
 );
 
 const splitLink = split(
@@ -28,7 +47,7 @@ const splitLink = split(
     );
   },
   wsLink,
-  httpLink
+  authLink.concat(httpLink)
 );
 
 const client = new ApolloClient({
