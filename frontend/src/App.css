@@ -1,8 +1,16 @@
 #root {
+  max-width: 1280px;
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.App {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
@@ -47,6 +55,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  background: linear-gradient(90deg, #6b73ff, #000dff);
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
 }
 
 .user-info {
@@ -58,7 +70,7 @@
 .auth-forms {
   display: flex;
   gap: 2rem;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
 .main-content {
@@ -90,6 +102,9 @@
 
 .conversation-details li {
   margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
 }
 
 .user-form {
@@ -111,4 +126,6 @@
 .logout {
   background-color: #ff6666;
   color: #fff;
+  border-radius: 8px;
+  border: none;
 }
